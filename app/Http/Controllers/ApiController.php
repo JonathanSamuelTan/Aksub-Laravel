@@ -25,7 +25,8 @@ class ApiController extends Controller
 
          return response()->json([
             'message' => 'success',
-            'data' => $driver
+            'data' => $driver,
+            'user' => auth()->user()
         ]);
     }
 
@@ -35,8 +36,10 @@ class ApiController extends Controller
 
         return response()->json([
             'message' => 'success',
-            'data' => $drivers
+            'data' => $drivers,
+            'user' => auth()->user()
         ]);
+
     }
 
     // update
@@ -50,7 +53,8 @@ class ApiController extends Controller
 
         return response()->json([
             'message' => 'success',
-            'data' => $driver
+            'data' => $driver,
+            'user' => auth()->user()
         ]);
     }
 
