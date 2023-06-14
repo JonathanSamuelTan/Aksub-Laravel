@@ -7,10 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Driver;
 use App\Models\User;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Validation\ValidationException;
+
 
 
 class ApiController extends Controller
 {
+
     // Create
     public function store(Request $request){
         $driver = Driver::Create([
@@ -63,50 +67,65 @@ class ApiController extends Controller
 
     // register
     public function register(Request $request){
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|unique:users',
-            'password' => 'required'
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required|unique:users',
+                'password' => 'required',
+            ]);
 
-        $user = User::Create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password)           
-         ]);
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-         $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-         return response()->json([
-            'message' => 'success',
-            'data' => [
-                'user' => $user,
-                'token' => $token
-            ]
-        ]);
+            return response()->json([
+                'message' => 'success',
+                'data' => [
+                    'user' => $user,
+                    'token' => $token,
+                ],
+            ]);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => 'failed',
+                'data' => $exception->errors(),
+            ], 422);
+        }
     }
+
 
     // login
     public function login(Request $request){
-        $user = User::where('email', $request->email)->first();
+        try {
+            $user = User::where('email', $request->email)->first();
 
-        if(!$user || !Hash::check($request->password, $user->password)){
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                throw ValidationException::withMessages([
+                    'email' => 'The provided credentials are incorrect.',
+                ]);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'success',
+                'data' => [
+                    'user' => $user,
+                    'token' => $token,
+                ],
+            ]);
+        } catch (ValidationException $exception) {
             return response()->json([
                 'message' => 'failed',
-                'data' => 'Unauthorized'
+                'data' => $exception->errors(),
             ], 401);
         }
-        
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'success',
-            'data' => [
-                'user' => $user,
-                'token' => $token
-            ]
-        ]);
     }
+
 
     
 

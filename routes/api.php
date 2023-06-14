@@ -19,10 +19,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('/ApiIndex', [ApiController::class, 'index']);
+    Route::post('/ApiStore', [ApiController::class, 'store']);
+    Route::put('/ApiUpdate/{id}', [ApiController::class, 'update']);
+    Route::delete('/ApiDelete/{id}', [ApiController::class, 'destroy']);
+});
 
-Route::Get('/ApiIndex',[ApiController::class, 'index']);
-Route::POST('/ApiStore',[ApiController::class, 'store']);
-Route::PUT('/ApiUpdate/{id}',[ApiController::class, 'update']);
-Route::DELETE('/ApiDelete/{id}',[ApiController::class, 'destroy']);
-Route::POST('/ApiRegister',[ApiController::class, 'register']);
-Route::POST('/ApiLogin',[ApiController::class, 'login']);
+Route::post('/ApiRegister', [ApiController::class, 'register']);
+Route::post('/ApiLogin', [ApiController::class, 'login']);
